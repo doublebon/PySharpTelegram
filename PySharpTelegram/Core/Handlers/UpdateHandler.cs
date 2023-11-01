@@ -10,10 +10,19 @@ public class UpdateHandler : IUpdateHandler
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<UpdateHandler> _logger;
+    private readonly InlineAttributesHandler _inlineAttributesHandler;
+    private readonly MessageAttributesHandler _messageAttributesHandler;
     
-    public UpdateHandler(ITelegramBotClient botClient, ILogger<UpdateHandler> logger)
+    public UpdateHandler(
+        ITelegramBotClient botClient, 
+        InlineAttributesHandler inlineAttributesHandler,
+        MessageAttributesHandler messageAttributesHandler,
+        ILogger<UpdateHandler> logger
+        )
     {
         _botClient = botClient;
+        _inlineAttributesHandler = inlineAttributesHandler;
+        _messageAttributesHandler = messageAttributesHandler;
         _logger = logger;
     }
 
@@ -33,7 +42,7 @@ public class UpdateHandler : IUpdateHandler
     private async Task BotOnMessageReceived(Message message, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Received message from {from}:\n{message}", message.From, message);
-        await MessageAttributesHandler.InvokeByMessageType(_botClient, message, cancellationToken);
+        await _messageAttributesHandler.InvokeByMessageType(_botClient, message, cancellationToken);
     }
     
     private async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery, CancellationToken cancellationToken)
@@ -54,7 +63,7 @@ public class UpdateHandler : IUpdateHandler
     private async Task BotOnInlineQueryReceived(InlineQuery inlineQuery, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Received inline query from: {InlineQueryFromId}", inlineQuery.From.Username);
-        await InlineAttributesHandler.InvokeByInlineType(_botClient, inlineQuery, cancellationToken);
+        await _inlineAttributesHandler.InvokeByInlineType(_botClient, inlineQuery, cancellationToken);
     }
     
     private async Task BotOnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult, CancellationToken cancellationToken)
