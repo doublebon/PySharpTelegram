@@ -1,4 +1,4 @@
-# Telegram.Bot Wrapper
+# PySharpTelegram
 
 ## Description
 

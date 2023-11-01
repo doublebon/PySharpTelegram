@@ -6,6 +6,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Version>0.1.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,10 +24,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="LICENCE.txt">
+      <None Update="LICENSE.txt" Pack="true" PackagePath="\">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Readme.md">
+      <None Update="README.md" Pack="true" PackagePath="\">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
