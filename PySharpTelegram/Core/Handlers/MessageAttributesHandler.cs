@@ -1,27 +1,35 @@
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 using PySharpTelegram.Core.Attributes;
-using PySharpTelegram.Core.Support;
+using PySharpTelegram.Core.Services.Abstract;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace PySharpTelegram.Core.Handlers;
 
-public static class MessageAttributesHandler
+public class MessageAttributesHandler
 {
-    private static readonly Type[] AttrTypes = {
+    private readonly Type[] _attrTypes = {
         typeof(MessageAttributes.CommandAttribute), 
         typeof(MessageAttributes.FilterByTypeAttribute),
         typeof(MessageAttributes.AnyAttribute)
     };
 
-    private static readonly MethodInfo[] Methods = SupportUtils.ParseAllChatMethodsWithAttributes("chat", AttrTypes);
+    private readonly ILogger<InlineAttributesHandler> _logger;
+    private readonly MethodInfo[] _methods;
 
-    public static async Task InvokeByMessageType(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    public MessageAttributesHandler(AbstractExternalConnector connector, ILogger<InlineAttributesHandler> logger)
     {
-        foreach (var method in Methods)
+        _logger = logger;
+        _methods = connector.FindTelegramMethods(_attrTypes);
+    }
+
+    public async Task InvokeByMessageType(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+    {
+        foreach (var method in _methods)
         {
-            var methodCustomAttribute = method.GetCustomAttributes().First(attr => AttrTypes.Contains(attr.GetType()));
+            var methodCustomAttribute = method.GetCustomAttributes().First(attr => _attrTypes.Contains(attr.GetType()));
             switch (methodCustomAttribute)
             {
                 case MessageAttributes.CommandAttribute command when message is { Type: MessageType.Text} && command.Commands.Contains(message.Text): 
