@@ -34,6 +34,6 @@ public abstract class AbstractExternalConnector
             methods.AddRange(typeMethods);
         }
         
-        return methods.OrderBy(m => m.GetCustomAttributes(typeof(MessageAttributes.CommandAttribute), false).Length == 0).ToArray();
+        return methods.OrderBy(m => m.GetCustomAttributes(typeof(MessageFilter.ByCommandAttribute), false).Length == 0).ToArray();
     }
 }

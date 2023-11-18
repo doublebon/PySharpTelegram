@@ -7,8 +7,18 @@ namespace TestApp.Chat;
 
 public class ChatMessage
 {
+    [Restrictions.AccessForUsers("username")]   
+    [MessageFilter.ByCommand("/test_access")]
+    public static async Task ProcessTextRestrictions(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"You got access!",
+            cancellationToken: cancellationToken
+        );
+    }
     
-    [MessageAttributes.FilterByType(MessageType.Text)]
+    [MessageFilter.ByType(MessageType.Text)]
     public static async Task ProcessText(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
@@ -18,7 +28,7 @@ public class ChatMessage
         );
     }
     
-    [MessageAttributes.FilterByType(MessageType.Audio, MessageType.Document)]
+    [MessageFilter.ByType(MessageType.Audio)]
     public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
@@ -28,7 +38,7 @@ public class ChatMessage
         );
     }
     
-    [MessageAttributes.FilterByType(MessageType.Photo)]
+    [MessageFilter.ByType(MessageType.Photo)]
     public static async Task ProcessPhoto(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendPhotoAsync(
@@ -39,7 +49,7 @@ public class ChatMessage
             cancellationToken: cancellationToken);
     }
     
-    [MessageAttributes.Any]
+    [MessageFilter.Any]
     public static async Task ProcessTextAny(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
@@ -49,7 +59,7 @@ public class ChatMessage
         );
     }
     
-    [MessageAttributes.Command("/help")]
+    [MessageFilter.ByCommand("/help")]
     public static async Task ProcessCommand(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
