@@ -10,7 +10,7 @@ namespace PySharpTelegram.Core.Handlers;
 public class InlineAttributesHandler
 {
     private readonly Type[] _attrTypes = {
-        typeof(InlineAttributes.AnyAttribute),
+        typeof(InlineFilter.AnyAttribute),
     };
     
     private readonly ILogger<InlineAttributesHandler> _logger;
@@ -30,7 +30,7 @@ public class InlineAttributesHandler
             var methodCustomAttribute = method.GetCustomAttributes().First(attr => _attrTypes.Contains(attr.GetType()));
             switch (methodCustomAttribute)
             {
-                case InlineAttributes.AnyAttribute:
+                case InlineFilter.AnyAttribute:
                     await (Task) method.Invoke(null, new object[] { botClient, inlineQuery, inlineQuery.From, cancellationToken })!;
                     return;
             }
