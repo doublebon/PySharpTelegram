@@ -23,7 +23,7 @@ in progress...
 
 ### Usage
 
-in progress...
+Check for examples https://github.com/doublebon/PySharpTelegram
 
 ## Contributing
 

@@ -3,13 +3,13 @@ namespace PySharpTelegram.Core.Attributes;
 public class Restrictions
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class AccessForUsersAttribute : Attribute
+    public class AccessGroups : Attribute
     {
-        public string[] AccessByUserName { get; }
+        public string[] AccessGroupName { get; }
         
-        public AccessForUsersAttribute(params string[] accessByUserName)
+        public AccessGroups(params string[] groupName)
         {
-            AccessByUserName = accessByUserName;
+            AccessGroupName = groupName;
         }
     }
 }

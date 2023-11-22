@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using PySharpTelegram.Core.Attributes;
 using PySharpTelegram.Core.Services.Abstract;
+using PySharpTelegram.Core.Services.AccessGroups;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -17,16 +18,25 @@ public class MessageAttributesHandler
     };
     
     private readonly Type[] _restrictionsAttrTypes = {
-        typeof(Restrictions.AccessForUsersAttribute),
+        typeof(Restrictions.AccessGroups),
     };
 
     private readonly ILogger<InlineAttributesHandler> _logger;
     private readonly MethodInfo[] _methods;
-
-    public MessageAttributesHandler(AbstractExternalConnector connector, ILogger<InlineAttributesHandler> logger)
+    private readonly IAccessGroup? _accessGroup;
+    
+    public MessageAttributesHandler(AbstractExternalConnector connector, ILogger<InlineAttributesHandler> logger) : this(connector, null, logger)
     {
-        _logger = logger;
+    }
+
+    public MessageAttributesHandler(
+        AbstractExternalConnector connector, 
+        IAccessGroup? accessGroup,
+        ILogger<InlineAttributesHandler> logger)
+    {
         _methods = connector.FindTelegramMethods(_attrTypes);
+        _accessGroup = accessGroup;
+        _logger = logger;
     }
 
     public async Task InvokeByMessageType(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
@@ -34,7 +44,7 @@ public class MessageAttributesHandler
         _logger.LogInformation("Got message: {msg}",Newtonsoft.Json.JsonConvert.SerializeObject(message));
         foreach (var method in _methods)
         {
-            if (!UserHasAccess(method, message.From!))
+            if (! await UserHasAccess(method, message.From!))
             {
                 _logger.LogInformation("User: {user} does not have access to perform this operation.", message.From!.Username);
                 continue;
@@ -61,13 +71,17 @@ public class MessageAttributesHandler
         }
     }
 
-    private bool UserHasAccess(MemberInfo method, User user)
+    private async Task<bool> UserHasAccess(MemberInfo method, User user)
     {
-        var restrictionsAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _restrictionsAttrTypes.Contains(attr.GetType()));
+        if (_accessGroup == null)
+        {
+            return true;
+        }
         
+        var restrictionsAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _restrictionsAttrTypes.Contains(attr.GetType()));
         return restrictionsAttribute switch
         {
-            Restrictions.AccessForUsersAttribute access when access.AccessByUserName.Any(privileged => privileged.Contains(user.Username!)) => true,
+            Restrictions.AccessGroups accessGroupName when (await _accessGroup.GetGroupMembersAsync(accessGroupName.AccessGroupName)).Any(privileged => privileged.Username!.Contains(user.Username!, StringComparison.OrdinalIgnoreCase)) => true,
             null => true,
             _ => false
         };

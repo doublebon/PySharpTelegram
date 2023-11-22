@@ -7,7 +7,7 @@ namespace TestApp.Chat;
 
 public class ChatMessage
 {
-    [Restrictions.AccessForUsers("username")]   
+    [Restrictions.AccessGroups("admins")]
     [MessageFilter.ByCommand("/test_access")]
     public static async Task ProcessTextRestrictions(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
