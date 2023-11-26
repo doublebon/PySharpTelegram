@@ -27,6 +27,50 @@ public abstract class MessageFilter
     }
     
     [AttributeUsage(AttributeTargets.Method)]
+    public class ByTextEqualsAttribute : Attribute
+    {
+        public string Text { get; }
+        
+        public ByTextEqualsAttribute(string text)
+        {
+            Text = text;
+        }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class ByTextContainsAttribute : Attribute
+    {
+        public string[] Texts { get; }
+        
+        public ByTextContainsAttribute(params string[] texts)
+        {
+            Texts = texts;
+        }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class ByReplyOnTextEqualsAttribute : Attribute
+    {
+        public string Text { get; }
+        
+        public ByReplyOnTextEqualsAttribute(string text)
+        {
+            Text = text;
+        }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class ByReplyOnTextContainsAttribute : Attribute
+    {
+        public string[] Texts { get; }
+        
+        public ByReplyOnTextContainsAttribute(params string[] texts)
+        {
+            Texts = texts;
+        }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
     public class AnyAttribute : Attribute
     {
     }

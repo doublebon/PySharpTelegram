@@ -18,6 +18,46 @@ public class ChatMessage
         );
     }
     
+    [MessageFilter.ByTextEquals("hello")]
+    public static async Task ProcessTextEquals(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got equals trigger!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    [MessageFilter.ByTextContains("one", "two")]
+    public static async Task ProcessTextContains(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got contains trigger!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    [MessageFilter.ByReplyOnTextEquals("reply hello")]
+    public static async Task ProcessReplyOnTextEquals(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got equals replyOn trigger!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    [MessageFilter.ByReplyOnTextContains("reply one", "reply two")]
+    public static async Task ProcessReplyOnTextContains(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got contains replyOn trigger!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
     [MessageFilter.ByType(MessageType.Text)]
     public static async Task ProcessText(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {

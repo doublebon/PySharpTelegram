@@ -14,6 +14,10 @@ public class MessageAttributesHandler
     private readonly Type[] _attrTypes = {
         typeof(MessageFilter.ByCommandAttribute), 
         typeof(MessageFilter.ByTypeAttribute),
+        typeof(MessageFilter.ByTextEqualsAttribute),
+        typeof(MessageFilter.ByTextContainsAttribute),
+        typeof(MessageFilter.ByReplyOnTextEqualsAttribute),
+        typeof(MessageFilter.ByReplyOnTextContainsAttribute),
         typeof(MessageFilter.AnyAttribute)
     };
     
@@ -56,11 +60,32 @@ public class MessageAttributesHandler
             switch (methodCustomAttribute)
             {
                 case MessageFilter.ByCommandAttribute command 
-                    when message is { Type: MessageType.Text, Text: { } } && command.Commands.Contains(message.Text): 
+                    when message is { Type: MessageType.Text, Text: { } } && message.Text.StartsWith("/") && command.Commands.Contains(message.Text): 
                     await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
                     return;
                 
-                case MessageFilter.ByTypeAttribute attr when attr.Type.Contains(message.Type):
+                case MessageFilter.ByTextEqualsAttribute expTextEquals
+                    when message is { Type: MessageType.Text, Text: { } } && message.Text.Equals(expTextEquals.Text, StringComparison.OrdinalIgnoreCase):
+                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
+                    return;
+                
+                case MessageFilter.ByTextContainsAttribute expTextContains
+                    when message is { Type: MessageType.Text, Text: { } } && ContainsPhrase(message.Text, expTextContains.Texts):
+                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
+                    return;
+                
+                case MessageFilter.ByReplyOnTextEqualsAttribute expReplyOnTextEquals
+                    when message.ReplyToMessage is { Type: MessageType.Text, Text: { } } && expReplyOnTextEquals.Text.Equals(message.ReplyToMessage.Text, StringComparison.OrdinalIgnoreCase):
+                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
+                    return;
+                
+                case MessageFilter.ByReplyOnTextContainsAttribute expReplyOnTextContains
+                    when message.ReplyToMessage is { Type: MessageType.Text, Text: { } } && ContainsPhrase(message.ReplyToMessage.Text, expReplyOnTextContains.Texts):
+                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
+                    return;
+                
+                case MessageFilter.ByTypeAttribute attr 
+                    when attr.Type.Contains(message.Type):
                     await (Task) method.Invoke(null, new object[] { botClient, message, message.From!,  cancellationToken })!;
                     return;
                 
@@ -85,5 +110,31 @@ public class MessageAttributesHandler
             null => true,
             _ => false
         };
+    }
+    
+    bool ContainsPhrase(string text, IEnumerable<string> phrases)
+    {
+        string[] textWords = System.Text.RegularExpressions.Regex.Split(text.ToLower(), @"\W+");
+
+        return phrases.Any(phrase =>
+        {
+            string[] phraseWords = System.Text.RegularExpressions.Regex.Split(phrase.ToLower(), @"\W+");
+            int phraseStartIndex = Array.IndexOf(textWords, phraseWords[0]);
+
+            if (phraseStartIndex < 0 || phraseStartIndex + phraseWords.Length > textWords.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < phraseWords.Length; i++)
+            {
+                if (!textWords[phraseStartIndex + i].Equals(phraseWords[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 }
