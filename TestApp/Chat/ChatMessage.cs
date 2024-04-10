@@ -8,6 +8,7 @@ namespace TestApp.Chat;
 
 public class ChatMessage
 {
+    //Multiple filters usage. Invoke if fits one of this filters
     [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, text: "/aaa" )]
     [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, text: "/bbb" )]
     public static async Task ProcessTextEqualsAllOf(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
