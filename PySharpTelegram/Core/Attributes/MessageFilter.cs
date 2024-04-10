@@ -5,10 +5,10 @@ namespace PySharpTelegram.Core.Attributes;
 
 public abstract class MessageFilter
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class ContentTypeAttribute(params MessageType[] type) : Attribute
     {
-        public MessageType[] Type { get; } = type;
+        public IEnumerable<MessageType> Type { get; } = type;
     }
     
     [AttributeUsage(AttributeTargets.Method)]
