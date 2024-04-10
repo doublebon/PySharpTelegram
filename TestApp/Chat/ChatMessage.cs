@@ -8,8 +8,8 @@ namespace TestApp.Chat;
 
 public class ChatMessage
 {
-    
-    [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, text: "/lal" )]
+    [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, text: "/aaa" )]
+    [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, text: "/bbb" )]
     public static async Task ProcessTextEqualsAllOf(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(

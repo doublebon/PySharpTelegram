@@ -40,29 +40,48 @@ public class MessageAttributesHandler(
                 logger.LogInformation("User: {user} does not have access to perform this operation.", message.From!.Username);
                 continue;
             }
-            
-            var methodCustomAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _attrTypes.Contains(attr.GetType()));
-            if(methodCustomAttribute == null) return;
-            
-            switch (methodCustomAttribute)
+
+            var isAnyProcessed = await MultipleFilterProcessing(botClient, method, message, cancellationToken);
+            if (isAnyProcessed)
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task<bool> MultipleFilterProcessing(ITelegramBotClient botClient, MethodInfo method, Message message, CancellationToken cancellationToken)
+    {
+        var methodCustomAttribute = method.GetCustomAttributes().Where(attr => _attrTypes.Contains(attr.GetType())).ToList();
+        if(methodCustomAttribute.Count == 0) return false;
+
+        var isAnyComplete = false;
+        foreach (var attribute in methodCustomAttribute)
+        {
+            switch (attribute)
             {
                 case MessageFilter.TextAttribute textFilter
                     when IsTextSuitable(textFilter, message.Text):
                     await (Task) method.Invoke(null, [botClient, message, message.From!, cancellationToken])!;
-                    return;
+                    isAnyComplete = true;
+                    continue;
                 case MessageFilter.ReplyOnTextAttribute textFilter
                     when IsTextSuitable(textFilter, message.ReplyToMessage?.Text ?? ""):
                     await (Task) method.Invoke(null, [botClient, message, message.From!, cancellationToken])!;
-                    return;
+                    isAnyComplete = true;
+                    continue;
                 case MessageFilter.ContentTypeAttribute attr 
                     when attr.Type.Contains(message.Type):
                     await (Task) method.Invoke(null, [botClient, message, message.From!,  cancellationToken])!; 
-                    return;
+                    isAnyComplete = true;
+                    continue;
                 case MessageFilter.AnyAttribute: 
                     await (Task) method.Invoke(null, [botClient, message, message.From!,  cancellationToken])!; 
-                    return;
+                    isAnyComplete = true;
+                    continue;
             }
         }
+
+        return isAnyComplete;
     }
 
     private async Task<bool> UserHasAccess(MemberInfo method, User user)

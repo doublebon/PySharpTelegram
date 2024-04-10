@@ -34,7 +34,7 @@ public abstract class MessageFilter
         IEnumerable<string> Text { get; }
     }
     
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class TextAttribute(CompareType compareType, SearchType searchType, params string[] text)
         : Attribute, ITextType
     {
@@ -43,12 +43,19 @@ public abstract class MessageFilter
         public IEnumerable<string> Text { get; } = text;
     }
     
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class ReplyOnTextAttribute(CompareType compareType, SearchType searchType, params string[] text)
         : Attribute, ITextType
     {
         public CompareType CompareType { get; } = compareType;
         public SearchType SearchType { get; } = searchType;
         public IEnumerable<string> Text { get; } = text;
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class AnyOf<T>(T type): Attribute 
+        where T : Attribute
+    {
+        
     }
 }
