@@ -1,3 +1,4 @@
+using PySharpTelegram.Core.Attributes.enums;
 using Telegram.Bot.Types.Enums;
 
 namespace PySharpTelegram.Core.Attributes;
@@ -5,14 +6,9 @@ namespace PySharpTelegram.Core.Attributes;
 public abstract class MessageFilter
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class ByTypeAttribute : Attribute
+    public class ContentTypeAttribute(params MessageType[] type) : Attribute
     {
-        public MessageType[] Type { get; }
-        
-        public ByTypeAttribute(params MessageType[] type)
-        {
-            Type = type;
-        }
+        public MessageType[] Type { get; } = type;
     }
     
     [AttributeUsage(AttributeTargets.Method)]
@@ -27,52 +23,32 @@ public abstract class MessageFilter
     }
     
     [AttributeUsage(AttributeTargets.Method)]
-    public class ByTextEqualsAttribute : Attribute
-    {
-        public string Text { get; }
-        
-        public ByTextEqualsAttribute(string text)
-        {
-            Text = text;
-        }
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ByTextContainsAttribute : Attribute
-    {
-        public string[] Texts { get; }
-        
-        public ByTextContainsAttribute(params string[] texts)
-        {
-            Texts = texts;
-        }
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ByReplyOnTextEqualsAttribute : Attribute
-    {
-        public string Text { get; }
-        
-        public ByReplyOnTextEqualsAttribute(string text)
-        {
-            Text = text;
-        }
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ByReplyOnTextContainsAttribute : Attribute
-    {
-        public string[] Texts { get; }
-        
-        public ByReplyOnTextContainsAttribute(params string[] texts)
-        {
-            Texts = texts;
-        }
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
     public class AnyAttribute : Attribute
     {
     }
     
+    public interface ITextType
+    {
+        CompareType CompareType { get; }
+        SearchType SearchType { get; }
+        IEnumerable<string> Text { get; }
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class TextAttribute(CompareType compareType, SearchType searchType, params string[] text)
+        : Attribute, ITextType
+    {
+        public CompareType CompareType { get; } = compareType;
+        public SearchType SearchType { get; } = searchType;
+        public IEnumerable<string> Text { get; } = text;
+    }
+    
+    [AttributeUsage(AttributeTargets.Method)]
+    public class ReplyOnTextAttribute(CompareType compareType, SearchType searchType, params string[] text)
+        : Attribute, ITextType
+    {
+        public CompareType CompareType { get; } = compareType;
+        public SearchType SearchType { get; } = searchType;
+        public IEnumerable<string> Text { get; } = text;
+    }
 }
