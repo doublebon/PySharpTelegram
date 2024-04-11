@@ -65,7 +65,7 @@ public class MessageAttributesHandler(
                     isAnyComplete = true;
                     continue;
                 case MessageFilter.ReplyOnTextAttribute textFilter
-                    when IsTextSuitable(textFilter, message.ReplyToMessage?.Text ?? ""):
+                    when IsTextSuitable(textFilter, message.ReplyToMessage?.Text):
                     await (Task) method.Invoke(null, [botClient, message, message.From!, cancellationToken])!;
                     isAnyComplete = true;
                     continue;
@@ -106,6 +106,6 @@ public class MessageAttributesHandler(
         CompareType.Equals   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Intersect(textFilter.Text).Any(),
         CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(word.Contains)),
         CompareType.Contains when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(word.Contains)),
-        _ => throw new ArgumentOutOfRangeException("Unknown compare type")
+        _ => false
     };
 }

@@ -72,6 +72,7 @@ public class ChatMessage
     }
     
     [MessageFilter.ContentType(MessageType.Audio)]
+    [MessageFilter.ContentType(MessageType.Photo)]
     public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
