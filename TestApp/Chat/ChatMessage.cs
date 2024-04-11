@@ -73,11 +73,12 @@ public class ChatMessage
     
     [MessageFilter.ContentType(MessageType.Audio)]
     [MessageFilter.ContentType(MessageType.Photo)]
-    public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    [MessageFilter.ContentType(MessageType.Document)]
+    public static async Task ProcessContentType(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
             chatId: message.Chat,
-            text: $"You was send a audio and your id is: {user.Id}",
+            text: $"You was send a content type and your id is: {user.Id}",
             cancellationToken: cancellationToken
         );
     }
