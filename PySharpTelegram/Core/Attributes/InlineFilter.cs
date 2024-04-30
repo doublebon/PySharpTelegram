@@ -1,9 +1,7 @@
 namespace PySharpTelegram.Core.Attributes;
 
-public class InlineFilter
+public abstract class InlineFilter
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class AnyAttribute : Attribute
-    {
-    }
+    public class AnyAttribute : Attribute;
 }

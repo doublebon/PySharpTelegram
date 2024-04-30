@@ -12,20 +12,7 @@ public abstract class MessageFilter
     }
     
     [AttributeUsage(AttributeTargets.Method)]
-    public class ByCommandAttribute : Attribute
-    {
-        public string[] Commands { get; }
-        
-        public ByCommandAttribute(params string[] commands)
-        {
-            Commands = commands;
-        }
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
-    public class AnyAttribute : Attribute
-    {
-    }
+    public class AnyAttribute : Attribute;
     
     public interface ITextType
     {
@@ -50,12 +37,5 @@ public abstract class MessageFilter
         public CompareType CompareType { get; } = compareType;
         public SearchType SearchType { get; } = searchType;
         public IEnumerable<string> Text { get; } = text;
-    }
-    
-    [AttributeUsage(AttributeTargets.Method)]
-    public class AnyOf<T>(T type): Attribute 
-        where T : Attribute
-    {
-        
     }
 }

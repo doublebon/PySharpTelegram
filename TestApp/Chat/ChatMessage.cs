@@ -55,7 +55,7 @@ public class ChatMessage
     {
         await bot.SendTextMessageAsync(
             chatId: message.Chat,
-            text: $"You got Contains AnyOf!",
+            text: $"You got ReplyOnText Contains AnyOf!",
             cancellationToken: cancellationToken
         );
     }

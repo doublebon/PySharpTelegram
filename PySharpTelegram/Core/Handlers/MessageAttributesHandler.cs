@@ -16,7 +16,6 @@ public class MessageAttributesHandler(
     ILogger<InlineAttributesHandler> logger)
 {
     private readonly Type[] _attrTypes = [
-        typeof(MessageFilter.ByCommandAttribute), 
         typeof(MessageFilter.ContentTypeAttribute),
         typeof(MessageFilter.AnyAttribute),
         typeof(MessageFilter.TextAttribute),
