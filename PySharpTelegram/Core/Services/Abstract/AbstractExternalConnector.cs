@@ -22,18 +22,24 @@ public abstract class AbstractExternalConnector
         var dllFiles = Directory.GetFiles(".", "*.dll", SearchOption.AllDirectories);
         // Load the assemblies
         var assemblies = dllFiles.Select(Assembly.LoadFrom).ToList();
-        var types = assemblies
+        return assemblies
             .SelectMany(a => a.GetTypes())
-            .Where(t => t.Namespace != null && t.Namespace.StartsWith(namespaceToAnalyze));
+            .Where(t => t.Namespace != null && t.Namespace.StartsWith(namespaceToAnalyze))
+            .SelectMany(type => type.GetMethods(BindingFlags.Static | BindingFlags.Public))
+            .Where(method => methodsWithAttributes.Any(method.IsDefined))
+            .ToArray();
                 
-        var methods = new List<MethodInfo>();
-        foreach (var type in types)
-        {
-            var typeMethods = type.GetMethods(BindingFlags.Static | BindingFlags.Public)
-                .Where(method => methodsWithAttributes.Any(method.IsDefined));
-            methods.AddRange(typeMethods);
-        }
         
-        return methods.OrderBy(m => m.GetCustomAttributes(typeof(MessageFilter.ByCommandAttribute), false).Length == 0).ToArray();
+        
+        //
+        // var methods = new List<MethodInfo>();
+        // foreach (var type in types)
+        // {
+        //     var typeMethods = type.GetMethods(BindingFlags.Static | BindingFlags.Public)
+        //         .Where(method => methodsWithAttributes.Any(method.IsDefined));
+        //     methods.AddRange(typeMethods);
+        // }
+        //
+        // return methods.ToArray();
     }
 }

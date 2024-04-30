@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using PySharpTelegram.Core.Attributes;
+using PySharpTelegram.Core.Attributes.enums;
 using PySharpTelegram.Core.Services.Abstract;
 using PySharpTelegram.Core.Services.AccessGroups;
 using Telegram.Bot;
@@ -9,96 +10,82 @@ using Telegram.Bot.Types.Enums;
 
 namespace PySharpTelegram.Core.Handlers;
 
-public class MessageAttributesHandler
+public class MessageAttributesHandler(
+    AbstractExternalConnector connector, 
+    IAccessGroup? accessGroup,
+    ILogger<InlineAttributesHandler> logger)
 {
-    private readonly Type[] _attrTypes = {
-        typeof(MessageFilter.ByCommandAttribute), 
-        typeof(MessageFilter.ByTypeAttribute),
-        typeof(MessageFilter.ByTextEqualsAttribute),
-        typeof(MessageFilter.ByTextContainsAttribute),
-        typeof(MessageFilter.ByReplyOnTextEqualsAttribute),
-        typeof(MessageFilter.ByReplyOnTextContainsAttribute),
-        typeof(MessageFilter.AnyAttribute)
-    };
+    private readonly Type[] _attrTypes = [
+        typeof(MessageFilter.ContentTypeAttribute),
+        typeof(MessageFilter.AnyAttribute),
+        typeof(MessageFilter.TextAttribute),
+        typeof(MessageFilter.ReplyOnTextAttribute)
+    ];
     
-    private readonly Type[] _restrictionsAttrTypes = {
-        typeof(Restrictions.AccessGroups),
-    };
-
-    private readonly ILogger<InlineAttributesHandler> _logger;
-    private readonly MethodInfo[] _methods;
-    private readonly IAccessGroup? _accessGroup;
+    private readonly Type[] _restrictionsAttrTypes =
+    [
+        typeof(Restrictions.AccessGroups)
+    ];
     
-    public MessageAttributesHandler(AbstractExternalConnector connector, ILogger<InlineAttributesHandler> logger) : this(connector, null, logger)
-    {
-    }
-
-    public MessageAttributesHandler(
-        AbstractExternalConnector connector, 
-        IAccessGroup? accessGroup,
-        ILogger<InlineAttributesHandler> logger)
-    {
-        _methods = connector.FindTelegramMethods(_attrTypes);
-        _accessGroup = accessGroup;
-        _logger = logger;
-    }
+    private IEnumerable<MethodInfo> ChatMethods => connector.FindTelegramMethods(_attrTypes);
 
     public async Task InvokeByMessageType(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Got message: {msg}",Newtonsoft.Json.JsonConvert.SerializeObject(message));
-        foreach (var method in _methods)
+        logger.LogInformation("Got message: {msg}",Newtonsoft.Json.JsonConvert.SerializeObject(message));
+        foreach (var method in ChatMethods)
         {
             if (! await UserHasAccess(method, message.From!))
             {
-                _logger.LogInformation("User: {user} does not have access to perform this operation.", message.From!.Username);
+                logger.LogInformation("User: {user} does not have access to perform this operation.", message.From!.Username);
                 continue;
             }
-            
-            var methodCustomAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _attrTypes.Contains(attr.GetType()));
-            if(methodCustomAttribute == null) return;
-            
-            switch (methodCustomAttribute)
+
+            var isAnyProcessed = await MultipleFilterProcessing(botClient, method, message, cancellationToken);
+            if (isAnyProcessed)
             {
-                case MessageFilter.ByCommandAttribute command 
-                    when message is { Type: MessageType.Text, Text: { } } && message.Text.StartsWith("/") && command.Commands.Contains(message.Text): 
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
-                    return;
-                
-                case MessageFilter.ByTextEqualsAttribute expTextEquals
-                    when message is { Type: MessageType.Text, Text: { } } && message.Text.Equals(expTextEquals.Text, StringComparison.OrdinalIgnoreCase):
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
-                    return;
-                
-                case MessageFilter.ByTextContainsAttribute expTextContains
-                    when message is { Type: MessageType.Text, Text: { } } && ContainsPhrase(message.Text, expTextContains.Texts):
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
-                    return;
-                
-                case MessageFilter.ByReplyOnTextEqualsAttribute expReplyOnTextEquals
-                    when message.ReplyToMessage is { Type: MessageType.Text, Text: { } } && expReplyOnTextEquals.Text.Equals(message.ReplyToMessage.Text, StringComparison.OrdinalIgnoreCase):
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
-                    return;
-                
-                case MessageFilter.ByReplyOnTextContainsAttribute expReplyOnTextContains
-                    when message.ReplyToMessage is { Type: MessageType.Text, Text: { } } && ContainsPhrase(message.ReplyToMessage.Text, expReplyOnTextContains.Texts):
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!, cancellationToken })!;
-                    return;
-                
-                case MessageFilter.ByTypeAttribute attr 
-                    when attr.Type.Contains(message.Type):
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!,  cancellationToken })!;
-                    return;
-                
-                case MessageFilter.AnyAttribute:
-                    await (Task) method.Invoke(null, new object[] { botClient, message, message.From!,  cancellationToken })!;
-                    return;
+                break;
             }
         }
     }
 
+    private async Task<bool> MultipleFilterProcessing(ITelegramBotClient botClient, MethodInfo method, Message message, CancellationToken cancellationToken)
+    {
+        var methodCustomAttribute = method.GetCustomAttributes().Where(attr => _attrTypes.Contains(attr.GetType())).ToList();
+        if(methodCustomAttribute.Count == 0) return false;
+
+        var isAnyComplete = false;
+        foreach (var attribute in methodCustomAttribute)
+        {
+            switch (attribute)
+            {
+                case MessageFilter.TextAttribute textFilter
+                    when IsTextSuitable(textFilter, message.Text):
+                    await (Task) method.Invoke(null, [botClient, message, message.From!, cancellationToken])!;
+                    isAnyComplete = true;
+                    continue;
+                case MessageFilter.ReplyOnTextAttribute textFilter
+                    when IsTextSuitable(textFilter, message.ReplyToMessage?.Text):
+                    await (Task) method.Invoke(null, [botClient, message, message.From!, cancellationToken])!;
+                    isAnyComplete = true;
+                    continue;
+                case MessageFilter.ContentTypeAttribute attr 
+                    when attr.Type.Contains(message.Type):
+                    await (Task) method.Invoke(null, [botClient, message, message.From!,  cancellationToken])!; 
+                    isAnyComplete = true;
+                    continue;
+                case MessageFilter.AnyAttribute: 
+                    await (Task) method.Invoke(null, [botClient, message, message.From!,  cancellationToken])!; 
+                    isAnyComplete = true;
+                    continue;
+            }
+        }
+
+        return isAnyComplete;
+    }
+
     private async Task<bool> UserHasAccess(MemberInfo method, User user)
     {
-        if (_accessGroup == null)
+        if (accessGroup == null)
         {
             return true;
         }
@@ -106,35 +93,18 @@ public class MessageAttributesHandler
         var restrictionsAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _restrictionsAttrTypes.Contains(attr.GetType()));
         return restrictionsAttribute switch
         {
-            Restrictions.AccessGroups accessGroupName when (await _accessGroup.GetGroupMembersAsync(accessGroupName.AccessGroupName)).Any(privileged => privileged.Username!.Contains(user.Username!, StringComparison.OrdinalIgnoreCase)) => true,
+            Restrictions.AccessGroups accessGroupName when (await accessGroup.GetGroupMembersAsync(accessGroupName.AccessGroupName)).Any(privileged => privileged.Username!.Contains(user.Username!, StringComparison.OrdinalIgnoreCase)) => true,
             null => true,
             _ => false
         };
     }
-    
-    bool ContainsPhrase(string text, IEnumerable<string> phrases)
+
+    private static bool IsTextSuitable(MessageFilter.ITextType textFilter, string? message) => textFilter.CompareType switch
     {
-        string[] textWords = System.Text.RegularExpressions.Regex.Split(text.ToLower(), @"\W+");
-
-        return phrases.Any(phrase =>
-        {
-            string[] phraseWords = System.Text.RegularExpressions.Regex.Split(phrase.ToLower(), @"\W+");
-            int phraseStartIndex = Array.IndexOf(textWords, phraseWords[0]);
-
-            if (phraseStartIndex < 0 || phraseStartIndex + phraseWords.Length > textWords.Length)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < phraseWords.Length; i++)
-            {
-                if (!textWords[phraseStartIndex + i].Equals(phraseWords[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-    }
+        CompareType.Equals   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').SequenceEqual(textFilter.Text),
+        CompareType.Equals   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Intersect(textFilter.Text).Any(),
+        CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(word.Contains)),
+        CompareType.Contains when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(word.Contains)),
+        _ => false
+    };
 }

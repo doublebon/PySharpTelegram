@@ -1,15 +1,10 @@
 namespace PySharpTelegram.Core.Attributes;
 
-public class Restrictions
+public abstract class Restrictions
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class AccessGroups : Attribute
+    public class AccessGroups(params string[] groupName) : Attribute
     {
-        public string[] AccessGroupName { get; }
-        
-        public AccessGroups(params string[] groupName)
-        {
-            AccessGroupName = groupName;
-        }
+        public string[] AccessGroupName { get; } = groupName;
     }
 }

@@ -2,13 +2,13 @@
 
     <PropertyGroup>
         <OutputType>Library</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <Version>0.1.4</Version>
+        <Version>0.2</Version>
     </PropertyGroup>
 
     <ItemGroup>
