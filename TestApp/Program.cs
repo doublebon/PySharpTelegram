@@ -7,7 +7,7 @@ using PySharpTelegram.Core.Services.Abstract;
 using PySharpTelegram.Core.Services.AccessGroups;
 using Telegram.Bot;
 using TestApp.AccessGroups;
-using TestApp.Connector;
+using TestApp.Chat;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -28,7 +28,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<MessageAttributesHandler>();
         services.AddSingleton<IAccessGroup, AccessGroup>();
         services.AddSingleton<InlineAttributesHandler>();
-        services.AddSingleton<AbstractExternalConnector, ExternalConnector>(_ => new ExternalConnector("Chat"));
+        services.AddSingleton(ChatClassesConnector.Create(typeof(ChatInline), typeof(ChatMessage)));
     })
     .Build();
 

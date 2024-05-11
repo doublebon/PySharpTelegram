@@ -11,7 +11,7 @@ using Telegram.Bot.Types.Enums;
 namespace PySharpTelegram.Core.Handlers;
 
 public class MessageAttributesHandler(
-    AbstractExternalConnector connector, 
+    ChatClassesConnector connector, 
     IAccessGroup? accessGroup,
     ILogger<InlineAttributesHandler> logger)
 {
@@ -27,12 +27,10 @@ public class MessageAttributesHandler(
         typeof(Restrictions.AccessGroups)
     ];
     
-    private IEnumerable<MethodInfo> ChatMethods => connector.FindTelegramMethods(_attrTypes);
-
     public async Task InvokeByMessageType(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
         logger.LogInformation("Got message: {msg}",Newtonsoft.Json.JsonConvert.SerializeObject(message));
-        foreach (var method in ChatMethods)
+        foreach (var method in connector.ChatMethods)
         {
             if (! await UserHasAccess(method, message.From!))
             {

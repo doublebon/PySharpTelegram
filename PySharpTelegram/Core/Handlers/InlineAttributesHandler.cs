@@ -7,31 +7,25 @@ using Telegram.Bot.Types;
 
 namespace PySharpTelegram.Core.Handlers;
 
-public class InlineAttributesHandler
+public class InlineAttributesHandler(
+    ChatClassesConnector connector, 
+    ILogger<InlineAttributesHandler> logger)
 {
-    private readonly Type[] _attrTypes = {
-        typeof(InlineFilter.AnyAttribute),
-    };
-    
-    private readonly ILogger<InlineAttributesHandler> _logger;
-    private readonly MethodInfo[] _methods;
-
-    public InlineAttributesHandler(AbstractExternalConnector connector, ILogger<InlineAttributesHandler> logger)
-    {
-        _logger = logger;
-        _methods = connector.FindTelegramMethods(_attrTypes);
-    }
+    private readonly Type[] _attrTypes =
+    [
+        typeof(InlineFilter.AnyAttribute)
+    ];
     
     public async Task InvokeByInlineType(ITelegramBotClient botClient, InlineQuery inlineQuery, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("aaaaa");
-        foreach (var method in _methods)
+        logger.LogInformation("Got inline message: {msg}",Newtonsoft.Json.JsonConvert.SerializeObject(inlineQuery));
+        foreach (var method in connector.ChatMethods)
         {
             var methodCustomAttribute = method.GetCustomAttributes().First(attr => _attrTypes.Contains(attr.GetType()));
             switch (methodCustomAttribute)
             {
                 case InlineFilter.AnyAttribute:
-                    await (Task) method.Invoke(null, new object[] { botClient, inlineQuery, inlineQuery.From, cancellationToken })!;
+                    await (Task) method.Invoke(null, [botClient, inlineQuery, inlineQuery.From, cancellationToken])!;
                     return;
             }
         }
