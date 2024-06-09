@@ -3,5 +3,6 @@ namespace PySharpTelegram.Core.Attributes.enums;
 public enum CompareType
 {
     Equals,
-    Contains
+    Contains,
+    Regexp
 }

@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PySharpTelegram.Core.Attributes;
 using PySharpTelegram.Core.Attributes.enums;
@@ -12,7 +13,7 @@ namespace PySharpTelegram.Core.Handlers;
 
 public class MessageAttributesHandler(
     ChatClassesConnector connector, 
-    IAccessGroup? accessGroup,
+    IChatAccessGroup? accessGroup,
     ILogger<InlineAttributesHandler> logger)
 {
     private readonly Type[] _attrTypes = [
@@ -101,8 +102,10 @@ public class MessageAttributesHandler(
     {
         CompareType.Equals   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').SequenceEqual(textFilter.Text),
         CompareType.Equals   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Intersect(textFilter.Text).Any(),
-        CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(word.Contains)),
         CompareType.Contains when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(word.Contains)),
+        CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(word.Contains)),
+        CompareType.Regexp   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(regex => Regex.IsMatch(word, regex))),
+        CompareType.Regexp   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(regex => Regex.IsMatch(word, regex))),
         _ => false
     };
 }

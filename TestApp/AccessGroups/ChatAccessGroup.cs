@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 
 namespace TestApp.AccessGroups;
 
-public class AccessGroup : IAccessGroup
+public class ChatAccessGroup : IChatAccessGroup
 {
     public Task<User[]> GetGroupMembersAsync(params string[] accessGroupName)
     {

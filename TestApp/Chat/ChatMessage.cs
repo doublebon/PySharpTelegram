@@ -83,6 +83,26 @@ public class ChatMessage
         );
     }
     
+    [MessageFilter.Text(CompareType.Regexp, SearchType.AllOf, @"\d+")]
+    public static async Task ProcessRegexpAllNumbers(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got regexp all of filter",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    [MessageFilter.Text(CompareType.Regexp, SearchType.AnyOf, @"\d+")]
+    public static async Task ProcessRegexpAnyNumbers(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Got regexp any of filter",
+            cancellationToken: cancellationToken
+        );
+    }
+    
     [MessageFilter.Any]
     public static async Task ProcessAny(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
