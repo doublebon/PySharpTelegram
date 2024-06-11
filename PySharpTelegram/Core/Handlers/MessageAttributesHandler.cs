@@ -100,12 +100,12 @@ public class MessageAttributesHandler(
 
     private static bool IsTextSuitable(MessageFilter.ITextType textFilter, string? message) => textFilter.CompareType switch
     {
-        CompareType.Equals   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').SequenceEqual(textFilter.Text),
-        CompareType.Equals   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Intersect(textFilter.Text).Any(),
-        CompareType.Contains when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(word.Contains)),
-        CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(word.Contains)),
-        CompareType.Regexp   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.Any(regex => Regex.IsMatch(word, regex))),
-        CompareType.Regexp   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.Any(regex => Regex.IsMatch(word, regex))),
+        CompareType.Equals   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').SequenceEqual(textFilter.Text.SelectMany(text => text.Split(' '))),
+        CompareType.Equals   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Intersect(textFilter.Text.SelectMany(text => text.Split(' '))).Any(),
+        CompareType.Contains when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.SelectMany(text => text.Split(' ')).Any(word.Contains)),
+        CompareType.Contains when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.SelectMany(text => text.Split(' ')).Any(word.Contains)),
+        CompareType.Regexp   when textFilter.SearchType is SearchType.AllOf && message is not null => message.Split(' ').All(word => textFilter.Text.SelectMany(text => text.Split(' ')).Any(regex => Regex.IsMatch(word, regex))),
+        CompareType.Regexp   when textFilter.SearchType is SearchType.AnyOf && message is not null => message.Split(' ').Any(word => textFilter.Text.SelectMany(text => text.Split(' ')).Any(regex => Regex.IsMatch(word, regex))),
         _ => false
     };
 }

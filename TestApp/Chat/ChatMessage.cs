@@ -40,6 +40,26 @@ public class ChatMessage
         );
     }
     
+    [MessageFilter.Text(CompareType.Contains, SearchType.AllOf, ["Hello world"] )]
+    public static async Task ProcessTextContainsAllOfTabText(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"You got Contains Tab text!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    [MessageFilter.Text(CompareType.Equals, SearchType.AllOf, ["Hello two"] )]
+    public static async Task ProcessTextEqualsAllOfTabText(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"You got EqualsAllOfTabText!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
     [MessageFilter.Text(CompareType.Contains, SearchType.AnyOf, ["blal", "bkek"] )]
     public static async Task ProcessTextContainsAnyOf(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
