@@ -92,7 +92,13 @@ public class MessageAttributesHandler(
         var restrictionsAttribute = method.GetCustomAttributes().FirstOrDefault(attr => _restrictionsAttrTypes.Contains(attr.GetType()));
         return restrictionsAttribute switch
         {
-            Restrictions.AccessGroups accessGroupName when (await accessGroup.GetGroupMembersAsync(accessGroupName.AccessGroupName)).Any(privileged => privileged.Username!.Contains(user.Username!, StringComparison.OrdinalIgnoreCase)) => true,
+            Restrictions.AccessGroups accessGroupName when 
+                (await accessGroup.GetGroupMembersAsync(accessGroupName.AccessGroupName))
+                .Any(privileged =>
+                {
+                    var userName = privileged.Username ?? privileged.FirstName;
+                    return userName.Contains(user.Username ?? user.FirstName, StringComparison.OrdinalIgnoreCase);
+                }) => true, 
             null => true,
             _ => false
         };
